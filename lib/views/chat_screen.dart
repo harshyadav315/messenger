@@ -116,6 +116,7 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (context, snapshot) {
         return snapshot.hasData
             ? ListView.builder(
+                shrinkWrap: true,
                 reverse: true,
                 padding: EdgeInsets.only(
                   bottom: 70,
@@ -192,6 +193,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 20),
                         child: TextField(
+                          onSubmitted: ((value) {
+                            sendMessage(true);
+                          }),
                           onChanged: ((value) {
                             sendMessage(false);
                           }),

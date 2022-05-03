@@ -146,8 +146,12 @@ class _SearchUserState extends State<SearchUser> {
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
-                fontSize: 40,
+                fontSize: 30,
               ),
+            ),
+            Icon(
+              Icons.search_rounded,
+              color: Colors.transparent,
             ),
           ],
         ),
@@ -167,7 +171,7 @@ class _SearchUserState extends State<SearchUser> {
                     ? GestureDetector(
                         onTap: () {
                           isSearching = false;
-                          Navigator.of(context).pop();
+                          Navigator.pop(context);
                           // setState(() {});
                         },
                         child: Padding(

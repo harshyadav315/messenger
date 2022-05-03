@@ -18,6 +18,9 @@ class AuthMethods {
   signInWithEmail(BuildContext context, String email, String password) async {
     await FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password);
+
+    String username = email.replaceAll("@gmail.com", "");
+    await SharedPreferenceHelper().saveUserName(username);
   }
 
   signInWithGoogle(BuildContext context) async {

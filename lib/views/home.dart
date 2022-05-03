@@ -8,7 +8,17 @@ import 'package:messenger/services/auth.dart';
 import 'package:messenger/services/database.dart';
 import 'package:messenger/views/chat_screen.dart';
 import 'package:messenger/views/login.dart';
+import 'package:messenger/views/search_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+bool refresh = false;
+
+class CustomPageRoute extends MaterialPageRoute {
+  CustomPageRoute({builder}) : super(builder: builder);
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 0);
+}
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -25,19 +35,16 @@ class _HomeState extends State<Home> {
 
   Stream? usersStream, chatRoomsStream;
 
+  refreshScreen() {
+    Navigator.pushReplacement(
+        context, CustomPageRoute(builder: ((context) => Home())));
+  }
+
   getChatRoomIdByUsernames(String a, String b) {
     if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
       return "$a\_$b";
     } else {
       return "$b\_$a";
-    }
-  }
-
-  getChatRoomIdByUsernames_test(String a, String b) {
-    if (a.length > b.substring(0, 1).codeUnitAt(0)) {
-      return "$a\_$b";
-    } else {
-      return "$a\_$b";
     }
   }
 
@@ -57,9 +64,6 @@ class _HomeState extends State<Home> {
   initialFunctions() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await getmyInfo();
-    while (myUsername == null) {
-      print("dbcjhbdcbdbcjbdubcndf");
-    }
 
     setState(() {});
   }
@@ -99,92 +103,26 @@ class _HomeState extends State<Home> {
                     ),
                   );
                 })
-            : Center(child: Text("No Messages !"));
+            : Container(
+                child: LinearProgressIndicator(),
+              );
       },
     );
   }
 
   onSearchButtonClick() async {
-    isSearching = true;
+    // isSearching = true;
+    // setState(() {});
+    // usersStream =
+    //     await DatabaseMethods().getUserByUsername(_searchController.text);
+
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: ((context) =>
+                SearchUser(username: _searchController.text))))
+        .then((value) => refreshScreen());
+
     setState(() {});
-    usersStream =
-        await DatabaseMethods().getUserByUsername(_searchController.text);
-    setState(() {});
-  }
-
-  Widget searchUsersList() {
-    return StreamBuilder(
-        stream: usersStream,
-        builder: (context, snapshot) {
-          return snapshot.hasData
-              ? ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: (snapshot.data! as QuerySnapshot).docs.length,
-                  itemBuilder: (context, index) {
-                    DocumentSnapshot ds =
-                        (snapshot.data as QuerySnapshot).docs[index];
-                    return searchUserEntry(
-                        ds["imgUrl"], ds["username"], ds["name"], ds["email"]);
-                  })
-              : Center(
-                  child: CircularProgressIndicator(),
-                );
-        });
-  }
-
-  Widget searchUserEntry(String profileUrl, username, name, email) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: InkWell(
-        onTap: () {
-          if (myUsername != null) {
-            var chatRoomId = getChatRoomIdByUsernames(username, myUsername!);
-            // print("this is : $chatRoomId");
-            Map<String, dynamic> chatRoomInfoMap = {
-              "users": [myUsername, username],
-            };
-            DatabaseMethods().createChatRoom(chatRoomId, chatRoomInfoMap);
-          }
-
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: ((context) => ChatScreen(
-                        chatWithUsername: username,
-                        name: name,
-                        profileImage: profileUrl,
-                      ))));
-        },
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(45),
-              child: Image.network(
-                profileUrl,
-                height: 45,
-                width: 45,
-              ),
-            ),
-            SizedBox(
-              width: 20,
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                Text(email),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -222,61 +160,46 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(
-              height: 20,
-            ),
-            Row(
-              children: [
-                isSearching
-                    ? GestureDetector(
-                        onTap: () {
-                          isSearching = false;
-                          setState(() {});
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Icon(Icons.arrow_back_ios_new_rounded),
-                        ),
-                      )
-                    : Container(),
-                Flexible(
-                  child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      border: Border.all(
-                        color: Color(0x00bdbdbd),
-                      ),
-                      borderRadius: BorderRadius.circular(20),
+      body: Column(
+        children: [
+          SizedBox(
+            height: 20,
+          ),
+          Row(
+            children: [
+              Flexible(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    border: Border.all(
+                      color: Color(0x00bdbdbd),
                     ),
-                    child: TextField(
-                      onSubmitted: (value) {
-                        if (_searchController.text != "") {
-                          onSearchButtonClick();
-                        }
-                      },
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        icon: Icon(Icons.search_rounded),
-                        hintText: "Search ...",
-                      ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: TextField(
+                    onSubmitted: (value) {
+                      if (_searchController.text != "") {
+                        onSearchButtonClick();
+                      }
+                    },
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      icon: Icon(Icons.search_rounded),
+                      hintText: "Search ...",
                     ),
                   ),
                 ),
-              ],
-            ),
-            SizedBox(
-              height: 50,
-            ),
-            chatRoomsList(),
-            isSearching ? Flexible(child: searchUsersList()) : Container(),
-          ],
-        ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 50,
+          ),
+          chatRoomsList(),
+        ],
       ),
       backgroundColor: Colors.white,
     );
@@ -310,24 +233,41 @@ class _ChatRoomListTileState extends State<ChatRoomListTile> {
     name = qs.docs[0]["name"];
     profilePicUrl = qs.docs[0]["imgUrl"];
     gotData = true;
-    setState(() {});
+    if (refresh == false) {
+      setState(() {});
+    }
   }
 
   @override
   void initState() {
     getUserInfo();
+    setState(() {});
     super.initState();
+  }
+
+  refreshScreen() async {
+    // refresh = true;
+    await getUserInfo();
+    // print("refreshhhhhhhhhh");
+
+    Navigator.pushReplacement(
+        context,
+        CustomPageRoute(
+          builder: ((context) => Home()),
+        ));
   }
 
   onChatTap() {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: ((context) => ChatScreen(
-                  chatWithUsername: username,
-                  name: name,
-                  profileImage: profilePicUrl,
-                ))));
+      context,
+      MaterialPageRoute(
+        builder: ((context) => ChatScreen(
+              chatWithUsername: username,
+              name: name,
+              profileImage: profilePicUrl,
+            )),
+      ),
+    ).then((value) => refreshScreen());
   }
 
   @override
